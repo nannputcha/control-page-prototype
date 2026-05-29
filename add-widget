@@ -1,0 +1,305 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Account Widget</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased}
+body{background:#000;display:flex;justify-content:center;align-items:flex-start;padding:32px 24px;min-height:100vh;font-family:'SF Pro Text',-apple-system,BlinkMacSystemFont,sans-serif}
+.phone{position:relative;width:393px;background:#f2f2f7;border-radius:55px;overflow:hidden;border:10px solid #1a1a1a;box-shadow:0 0 0 1px #333,0 32px 80px rgba(0,0,0,0.8);flex-shrink:0}
+.dynamic-island{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:120px;height:34px;background:#000;border-radius:20px;z-index:100}
+.status{background:#fff;display:flex;justify-content:space-between;align-items:center;padding:58px 28px 12px;font-size:15px;font-weight:600}
+.status-time{font-size:16px;font-weight:700;letter-spacing:-0.5px}
+.status-icons{display:flex;align-items:center;gap:6px}
+.nav{background:rgba(255,255,255,0.94);backdrop-filter:blur(20px);display:flex;align-items:center;justify-content:space-between;padding:12px 20px 14px;border-bottom:0.5px solid rgba(0,0,0,0.12)}
+.nav-back{background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:3px;color:#007AFF;font-size:17px;padding:0}
+.nav-title{font-size:17px;font-weight:600;letter-spacing:-0.4px;color:#000}
+.nav-close{background:none;border:none;cursor:pointer;width:30px;height:30px;background:rgba(0,0,0,0.07);border-radius:50%;display:flex;align-items:center;justify-content:center}
+.scroll-area{overflow-y:auto;height:580px;padding-bottom:90px;-webkit-overflow-scrolling:touch}
+.scroll-area::-webkit-scrollbar{display:none}
+.preview-box{margin:16px 16px 0;background:#e5e5ea;border-radius:16px;height:104px;display:flex;align-items:center;justify-content:center}
+.mock-up{background:#fff;border-radius:10px;padding:8px 18px;font-size:12px;color:#8e8e93;text-align:center;line-height:1.7;font-weight:500;box-shadow:0 1px 4px rgba(0,0,0,0.08)}
+.section-header{padding:20px 32px 6px;font-size:13px;font-weight:400;color:#6d6d72;text-transform:uppercase;letter-spacing:0.4px}
+.list-group{background:#fff;border-radius:16px;margin:0 16px 8px;overflow:hidden}
+.list-group .item{display:flex;align-items:center;gap:12px;padding:0 16px;height:56px;border-bottom:0.5px solid rgba(0,0,0,0.1);background:#fff;position:relative;transition:background 0.08s}
+.list-group .item:last-child{border-bottom:none}
+.item.is-dragging{opacity:0.3}
+.item.over-top::before{content:'';position:absolute;top:0;left:16px;right:16px;height:2px;background:#007AFF;border-radius:1px;z-index:2}
+.item.over-bottom::after{content:'';position:absolute;bottom:0;left:16px;right:16px;height:2px;background:#007AFF;border-radius:1px;z-index:2}
+.remove-btn{width:22px;height:22px;border-radius:50%;background:#ff3b30;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+.add-btn{width:22px;height:22px;border-radius:50%;background:#34c759;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:opacity 0.15s}
+.add-btn:disabled{background:#c7c7cc;cursor:default;opacity:1}
+.item-text{flex:1;min-width:0}
+.item-name{font-size:17px;color:#000;letter-spacing:-0.3px;font-weight:400}
+.item-sub{font-size:13px;color:#8e8e93;margin-top:1px}
+.drag-handle{display:flex;flex-direction:column;gap:3.5px;padding:8px 4px;cursor:grab;flex-shrink:0;touch-action:none;-webkit-user-select:none;user-select:none;opacity:0.35}
+.drag-handle:active{cursor:grabbing}
+.drag-handle span{display:block;width:20px;height:2px;background:#3c3c43;border-radius:1px}
+#ghost{display:none;position:fixed;z-index:9999;pointer-events:none;background:#fff;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,0.22);padding:0 16px;height:56px;align-items:center;gap:12px}
+.footer{position:absolute;bottom:0;left:0;right:0;padding:12px 16px 34px;background:linear-gradient(transparent,#f2f2f7 24%)}
+.add-widget-btn{width:100%;background:#007AFF;border:none;border-radius:14px;padding:16px;color:#fff;font-size:17px;font-weight:600;cursor:pointer;letter-spacing:-0.3px}
+.add-widget-btn:active{opacity:0.85}
+.add-widget-btn:disabled{background:#c7c7cc;cursor:default;opacity:1}
+.toast{position:absolute;bottom:90px;left:50%;transform:translateX(-50%);background:rgba(50,50,50,0.88);backdrop-filter:blur(12px);color:#fff;font-size:13px;padding:8px 18px;border-radius:20px;white-space:nowrap;opacity:0;transition:opacity 0.2s;pointer-events:none}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="dynamic-island"></div>
+  <div class="status">
+    <span class="status-time">9:41</span>
+    <div class="status-icons">
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="none">
+        <rect x="0" y="8" width="3" height="4" rx="1" fill="#000"/>
+        <rect x="4.5" y="5.5" width="3" height="6.5" rx="1" fill="#000"/>
+        <rect x="9" y="3" width="3" height="9" rx="1" fill="#000"/>
+        <rect x="13.5" y="0" width="3" height="12" rx="1" fill="#000"/>
+      </svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+        <path d="M8 9.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z" fill="#000"/>
+        <path d="M2.5 6.2C3.9 4.8 5.85 4 8 4s4.1.8 5.5 2.2" stroke="#000" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+        <path d="M0 3.2C2.2 1.2 4.96 0 8 0s5.8 1.2 8 3.2" stroke="#000" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+      </svg>
+      <svg width="25" height="12" viewBox="0 0 25 12" fill="none">
+        <rect x="0.5" y="0.5" width="21" height="11" rx="3.5" stroke="#000" stroke-opacity="0.35"/>
+        <rect x="2" y="2" width="16" height="8" rx="2" fill="#000"/>
+        <path d="M23 4v4a2 2 0 0 0 0-4z" fill="#000" fill-opacity="0.4"/>
+      </svg>
+    </div>
+  </div>
+  <div class="nav">
+    <button class="nav-back">
+      <svg width="10" height="17" viewBox="0 0 10 17" fill="none"><path d="M8.5 1.5L1.5 8.5L8.5 15.5" stroke="#007AFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      &nbsp;Back
+    </button>
+    <span class="nav-title">Account Widget</span>
+    <button class="nav-close">
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 1l8 8M9 1L1 9" stroke="#000" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+
+  <div class="scroll-area">
+    <div class="preview-box"><div class="mock-up">2×4<br>Mock Up</div></div>
+    <div class="section-header">Display items <span id="count" style="text-transform:none;letter-spacing:0"></span></div>
+    <div class="list-group" id="selected-list"></div>
+    <div class="section-header">More items</div>
+    <div class="list-group" id="more-list"></div>
+  </div>
+
+  <div class="footer">
+    <button class="add-widget-btn">Add widget</button>
+  </div>
+  <div class="toast" id="toast"></div>
+</div>
+
+<div id="ghost">
+  <div style="width:22px;height:22px;border-radius:50%;background:#ff3b30;flex-shrink:0"></div>
+  <div style="flex:1" id="ghost-text"></div>
+  <div style="display:flex;flex-direction:column;gap:3.5px;opacity:.35">
+    <span style="display:block;width:20px;height:2px;background:#3c3c43;border-radius:1px"></span>
+    <span style="display:block;width:20px;height:2px;background:#3c3c43;border-radius:1px"></span>
+    <span style="display:block;width:20px;height:2px;background:#3c3c43;border-radius:1px"></span>
+  </div>
+</div>
+
+<script>
+const MAX = 5;
+
+// CIS order is defined by cisOrder array — index = priority
+const CIS_ORDER = [1234, 5678, 9011, 1112, 1314, 1516, 1718];
+
+// All items pool
+const ALL_ITEMS = [
+  {id:1, name:'Savings Account', acc:'xxx-x-xx1234', cisKey:1234},
+  {id:2, name:'Savings Account', acc:'xxx-x-xx5678', cisKey:5678},
+  {id:3, name:'Savings Account', acc:'xxx-x-xx9011', cisKey:9011},
+  {id:4, name:'Savings Account', acc:'xxx-x-xx1112', cisKey:1112},
+  {id:5, name:'Savings Account', acc:'xxx-x-xx1314', cisKey:1314},
+  {id:6, name:'Savings Account', acc:'xxx-x-xx1516', cisKey:1516},
+  {id:7, name:'Savings Account', acc:'xxx-x-xx1718', cisKey:1718},
+];
+
+function cisSort(arr){
+  return [...arr].sort((a,b)=> CIS_ORDER.indexOf(a.cisKey) - CIS_ORDER.indexOf(b.cisKey));
+}
+
+// Initial state: first 2 selected, rest in more (sorted by CIS)
+let selected = [ALL_ITEMS[0], ALL_ITEMS[1]];
+let more = cisSort(ALL_ITEMS.slice(2));
+
+// drag state
+let dragging = null, dragOffsetY = 0;
+const ghostEl = document.getElementById('ghost');
+
+function showToast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(el._t); el._t = setTimeout(()=>el.classList.remove('show'), 1800);
+}
+
+function render(){
+  document.getElementById('count').textContent = '('+selected.length+'/'+MAX+')';
+  document.querySelector('.add-widget-btn').disabled = selected.length === 0;
+
+  // --- selected ---
+  const sl = document.getElementById('selected-list');
+  sl.innerHTML = '';
+  if(selected.length === 0){
+    sl.innerHTML = '<div style="padding:28px 16px;text-align:center;font-size:15px;color:#8e8e93;">You need to select at least 1 item</div>';
+  }
+  selected.forEach(item => {
+    const d = document.createElement('div');
+    d.className = 'item'; d.dataset.id = item.id;
+    d.innerHTML = `
+      <button class="remove-btn" data-remove="${item.id}">
+        <svg width="10" height="2"><rect width="10" height="2" rx="1" fill="#fff"/></svg>
+      </button>
+      <div class="item-text">
+        <div class="item-name">${item.name}</div>
+        <div class="item-sub">${item.acc}</div>
+      </div>
+      <div class="drag-handle" data-handle="${item.id}">
+        <span></span><span></span><span></span>
+      </div>`;
+    sl.appendChild(d);
+  });
+
+  // --- more ---
+  const ml = document.getElementById('more-list');
+  ml.innerHTML = '';
+  if(!more.length){
+    ml.innerHTML = '<div style="padding:14px 16px;font-size:15px;color:#8e8e93">No more items</div>';
+  } else {
+    more.forEach(item => {
+      const d = document.createElement('div');
+      d.className = 'item'; d.dataset.id = item.id;
+      d.innerHTML = `
+        <button class="add-btn" data-add="${item.id}" ${selected.length>=MAX?'disabled':''}>
+          <svg width="12" height="12"><rect x="5" y="0" width="2" height="12" rx="1" fill="#fff"/><rect x="0" y="5" width="12" height="2" rx="1" fill="#fff"/></svg>
+        </button>
+        <div class="item-text">
+          <div class="item-name">${item.name}</div>
+          <div class="item-sub">${item.acc}</div>
+        </div>`;
+      ml.appendChild(d);
+    });
+  }
+
+  attachHandles();
+}
+
+// --- tap actions ---
+document.addEventListener('click', e => {
+  if(dragging) return;
+
+  const rm = e.target.closest('[data-remove]');
+  const ad = e.target.closest('[data-add]');
+
+  if(rm){
+    const id = +rm.dataset.remove;
+    const idx = selected.findIndex(x => x.id === id);
+    const [item] = selected.splice(idx, 1);
+    // return to more and re-sort by CIS
+    more.push(item);
+    more = cisSort(more);
+    render();
+  }
+
+  if(ad){
+    const id = +ad.dataset.add;
+    if(selected.length >= MAX){ return; }
+    const idx = more.findIndex(x => x.id === id);
+    const [item] = more.splice(idx, 1);
+    // append to end of selected (order by add sequence)
+    selected.push(item);
+    render();
+  }
+});
+
+// --- drag ---
+function attachHandles(){
+  document.querySelectorAll('[data-handle]').forEach(h => {
+    h.addEventListener('pointerdown', startDrag, {passive:false});
+  });
+}
+
+function startDrag(e){
+  e.preventDefault();
+  const id = +e.currentTarget.dataset.handle;
+  const srcEl = document.querySelector(`#selected-list .item[data-id="${id}"]`);
+  const rect = srcEl.getBoundingClientRect();
+  dragOffsetY = e.clientY - rect.top;
+  dragging = id;
+
+  const item = selected.find(x => x.id === id);
+  document.getElementById('ghost-text').innerHTML = `<div style="font-size:17px;color:#000;letter-spacing:-0.3px">${item.name}</div><div style="font-size:13px;color:#8e8e93">${item.acc}</div>`;
+  ghostEl.style.display = 'flex';
+  ghostEl.style.left = rect.left + 'px';
+  ghostEl.style.top = (e.clientY - dragOffsetY) + 'px';
+  ghostEl.style.width = rect.width + 'px';
+
+  srcEl.classList.add('is-dragging');
+  e.currentTarget.setPointerCapture(e.pointerId);
+}
+
+document.addEventListener('pointermove', e => {
+  if(!dragging) return;
+  e.preventDefault();
+  const listRect = document.getElementById('selected-list').getBoundingClientRect();
+  ghostEl.style.top = (e.clientY - dragOffsetY) + 'px';
+  ghostEl.style.left = listRect.left + 'px';
+
+  clearOver();
+  for(const item of document.querySelectorAll('#selected-list .item:not(.is-dragging)')){
+    const r = item.getBoundingClientRect();
+    if(e.clientY >= r.top && e.clientY < r.bottom){
+      item.classList.add(e.clientY < r.top + r.height/2 ? 'over-top' : 'over-bottom');
+      break;
+    }
+  }
+}, {passive:false});
+
+document.addEventListener('pointerup', e => {
+  if(!dragging) return;
+  ghostEl.style.display = 'none';
+  document.querySelector(`#selected-list .item[data-id="${dragging}"]`)?.classList.remove('is-dragging');
+
+  let insertBefore = null, insertAfterLast = false;
+  for(const item of document.querySelectorAll('#selected-list .item:not(.is-dragging)')){
+    const r = item.getBoundingClientRect();
+    if(e.clientY >= r.top && e.clientY < r.bottom){
+      const toId = +item.dataset.id;
+      if(e.clientY < r.top + r.height/2){ insertBefore = toId; }
+      else {
+        const idx = selected.findIndex(x => x.id === toId);
+        if(idx === selected.length - 1) insertAfterLast = true;
+        else insertBefore = selected[idx+1].id;
+      }
+      break;
+    }
+  }
+
+  const fromIdx = selected.findIndex(x => x.id === dragging);
+  if(insertBefore !== null){
+    const [moved] = selected.splice(fromIdx, 1);
+    const toIdx = selected.findIndex(x => x.id === insertBefore);
+    selected.splice(toIdx, 0, moved);
+  } else if(insertAfterLast){
+    const [moved] = selected.splice(fromIdx, 1);
+    selected.push(moved);
+  }
+
+  clearOver(); dragging = null; render();
+});
+
+function clearOver(){
+  document.querySelectorAll('.over-top,.over-bottom').forEach(el => el.classList.remove('over-top','over-bottom'));
+}
+
+render();
+</script>
+</body>
+</html>
